@@ -149,6 +149,8 @@ def main():
 
     config['LOCALE'] = args.locale
     config['CHINA'] = args.china
+    config['PAGE_PASS'] = args.page_pass
+    config['PAGE_USER'] = args.page_user
 
     app = Pogom(__name__)
     db = init_database(app)

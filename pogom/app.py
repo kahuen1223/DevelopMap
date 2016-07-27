@@ -4,7 +4,8 @@
 import calendar
 import logging
 
-from flask import Flask, jsonify, render_template, request
+from functools import wraps
+from flask import Flask, jsonify, render_template, request, Response
 from flask.json import JSONEncoder
 from flask_compress import Compress
 from datetime import datetime
@@ -15,6 +16,31 @@ from collections import OrderedDict
 
 from . import config
 from .models import Pokemon, Gym, Pokestop, ScannedLocation
+
+def check_auth(username, password):
+    """This function is called to check if a username /
+    password combination is valid.
+    """
+    if config['PAGE_PASS'] is not None:
+    	return username == config['PAGE_USER'] and password == config['PAGE_PASS']
+    else:
+	return	True
+
+def authenticate():
+    """Sends a 401 response that enables basic auth"""
+    return Response(
+    'Could not verify your access level for that URL.\n'
+    'You have to login with proper credentials', 401,
+    {'WWW-Authenticate': 'Basic realm="Login Required"'})
+
+def requires_auth(f):
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        auth = request.authorization
+        if not auth or not check_auth(auth.username, auth.password):
+            return authenticate()
+        return f(*args, **kwargs)
+    return decorated
 
 log = logging.getLogger(__name__)
 compress = Compress()
@@ -61,6 +87,7 @@ class Pogom(Flask):
             return jsonify({'message': 'invalid use of api'})
         return self.get_search_control()
 
+    @requires_auth
     def fullmap(self):
         args = get_args()
         fixed_display = "none" if args.fixed_location else "inline"
