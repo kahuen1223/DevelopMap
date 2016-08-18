@@ -525,14 +525,15 @@ def parse_map(args, map_dict, step_location, db_update_queue, wh_update_queue):
     for cell in cells:
         if config['parse_pokemon']:
             for p in cell.get('wild_pokemons', []):
-                # time_till_hidden_ms was overflowing causing a negative integer.
-                # It was also returning a value above 3.6M ms.
-                if 0 < p['time_till_hidden_ms'] < 3600000:
+                # time_till_hidden_ms was overflowing causing a negative integer. It was also returning a value above 3.6M ms.
+                if (0 < p['time_till_hidden_ms'] < 3600000):
+                    may_extend = False
                     d_t = datetime.utcfromtimestamp(
                         (p['last_modified_timestamp_ms'] +
                          p['time_till_hidden_ms']) / 1000.0)
                 else:
                     # Set a value of 15 minutes because currently its unknown but larger than 15.
+                    may_extend = True
                     d_t = datetime.utcfromtimestamp((p['last_modified_timestamp_ms'] + 900000) / 1000.0)
 
                 printPokemon(p['pokemon_data']['pokemon_id'], p['latitude'],
@@ -551,6 +552,7 @@ def parse_map(args, map_dict, step_location, db_update_queue, wh_update_queue):
                         'encounter_id': b64encode(str(p['encounter_id'])),
                         'spawnpoint_id': p['spawn_point_id'],
                         'pokemon_id': p['pokemon_data']['pokemon_id'],
+                        'may_extend': may_extend,
                         'latitude': p['latitude'],
                         'longitude': p['longitude'],
                         'disappear_time': calendar.timegm(d_t.timetuple()),
