@@ -105,7 +105,7 @@ def status_printer(threadStatus, search_items_queue, db_updates_queue, wh_queue)
             # Get the terminal size
             width, height = terminalsize.get_terminal_size()
             # Queue and overseer take 2 lines.  Switch message takes up 2 lines.  Remove an extra 2 for things like screen status lines.
-            usable_height = height - 6
+            usable_height = height - 4
             # Prevent people running terminals only 6 lines high from getting a divide by zero
             if usable_height < 1:
                 usable_height = 1
