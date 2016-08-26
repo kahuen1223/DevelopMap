@@ -213,6 +213,7 @@ def main():
                 spawns = Pokemon.get_spawnpoints_in_hex(position, args.step_limit)
                 file.write(json.dumps(spawns))
                 log.info('Finished exporting spawn points')
+            exit(0)
 
         argset = (args, mode, new_location_queue, pause_bit, encryption_lib_path, db_updates_queue, wh_updates_queue)
 
