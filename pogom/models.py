@@ -791,6 +791,7 @@ def db_updater(args, q):
                     break
                 except Exception as e:
                     log.warning('%s... Retrying', e)
+                    time.sleep(15)
 
             # Loop the queue
             while True:
@@ -806,6 +807,7 @@ def db_updater(args, q):
 
         except Exception as e:
             log.exception('Exception in db_updater: %s', e)
+            time.sleep(15)
 
 
 def clean_db_loop(args):
