@@ -15,9 +15,10 @@ from playhouse.shortcuts import RetryOperationalError
 from playhouse.migrate import migrate, MySQLMigrator, SqliteMigrator
 from datetime import datetime, timedelta
 from base64 import b64encode
+from pgoapi.utilities import f2i
 
 from . import config
-from .utils import get_pokemon_name, get_pokemon_rarity, get_pokemon_types, get_args
+from .utils import get_pokemon_name, get_pokemon_rarity, get_pokemon_types, get_args, get_move_name
 from .transform import transform_from_wgs_to_gcj, get_new_coords
 from .customLog import printPokemon
 
@@ -79,6 +80,11 @@ class Pokemon(BaseModel):
     latitude = DoubleField()
     longitude = DoubleField()
     disappear_time = DateTimeField(index=True)
+    attack = IntegerField(null=True)
+    defense = IntegerField(null=True)
+    stamina = IntegerField(null=True)
+    move_1 = IntegerField(null=True)
+    move_2 = IntegerField(null=True)
 
     class Meta:
         indexes = ((('latitude', 'longitude'), False),)
@@ -108,6 +114,8 @@ class Pokemon(BaseModel):
             p['pokemon_name'] = get_pokemon_name(p['pokemon_id'])
             p['pokemon_rarity'] = get_pokemon_rarity(p['pokemon_id'])
             p['pokemon_types'] = get_pokemon_types(p['pokemon_id'])
+            p['move_1_name'] = get_move_name(p['move_1'])
+            p['move_2_name'] = get_move_name(p['move_2'])
             if args.china:
                 p['latitude'], p['longitude'] = \
                     transform_from_wgs_to_gcj(p['latitude'], p['longitude'])
@@ -145,6 +153,8 @@ class Pokemon(BaseModel):
             p['pokemon_name'] = get_pokemon_name(p['pokemon_id'])
             p['pokemon_rarity'] = get_pokemon_rarity(p['pokemon_id'])
             p['pokemon_types'] = get_pokemon_types(p['pokemon_id'])
+            p['move_1_name'] = get_move_name(p['move_1'])
+            p['move_2_name'] = get_move_name(p['move_2'])
             if args.china:
                 p['latitude'], p['longitude'] = \
                     transform_from_wgs_to_gcj(p['latitude'], p['longitude'])
@@ -544,7 +554,12 @@ def parse_map(args, map_dict, step_location, db_update_queue, wh_update_queue):
                     'pokemon_id': p['pokemon_data']['pokemon_id'],
                     'latitude': p['latitude'],
                     'longitude': p['longitude'],
-                    'disappear_time': d_t
+                    'disappear_time': d_t,
+                    'attack' : p['pokemon_data'].get('individual_attack', None),
+                    'defense' : p['pokemon_data'].get('individual_defense', None),
+                    'stamina' : p['pokemon_data'].get('individual_stamina', None),
+                    'move_1' : p['pokemon_data'].get('move_1', None),
+                    'move_2' : p['pokemon_data'].get('move_2', None)
                 }
 
                 if args.webhooks:
@@ -552,12 +567,18 @@ def parse_map(args, map_dict, step_location, db_update_queue, wh_update_queue):
                         'encounter_id': b64encode(str(p['encounter_id'])),
                         'spawnpoint_id': p['spawn_point_id'],
                         'pokemon_id': p['pokemon_data']['pokemon_id'],
+                        'pokemon_data': p['pokemon_data'],
                         'may_extend': may_extend,
                         'latitude': p['latitude'],
                         'longitude': p['longitude'],
                         'disappear_time': calendar.timegm(d_t.timetuple()),
                         'last_modified_time': p['last_modified_timestamp_ms'],
-                        'time_until_hidden_ms': p['time_till_hidden_ms']
+                        'time_until_hidden_ms': p['time_till_hidden_ms'],
+                        'attack' : p['pokemon_data'].get('individual_attack', None),
+                        'defense' : p['pokemon_data'].get('individual_defense', None),
+                        'stamina' : p['pokemon_data'].get('individual_stamina', None),
+                        'move_1' : p['pokemon_data'].get('move_1', None),
+                        'move_2' : p['pokemon_data'].get('move_2', None)
                     }))
 
         for f in cell.get('forts', []):

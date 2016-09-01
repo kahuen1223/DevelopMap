@@ -513,6 +513,16 @@ def search_worker_thread(args, account, search_items_queue, pause_bit, encryptio
                     continue
 
                 # Got the response, parse it out, send todo's to db/wh queues
+                cells = response_dict['responses']['GET_MAP_OBJECTS']['map_cells']
+                for cell in cells:
+                    for p in cell.get('wild_pokemons', []):
+                        time.sleep(random.random() + 1)
+                        status['message'] = 'Encountering pokemon {} with spawn point {}'.format(p['encounter_id'],p['spawn_point_id'])
+                        log.debug(status['message'])
+                        pokemon_dict = encounter_request(api,step_location,p['encounter_id'],p['spawn_point_id'])
+                        if pokemon_dict:
+                            p.update(pokemon_dict['responses']['ENCOUNTER']['wild_pokemon'])
+
                 try:
                     parsed = parse_map(args, response_dict, step_location, dbq, whq)
                     search_items_queue.task_done()
@@ -656,6 +666,16 @@ def gym_request(api, position, gym):
         log.warning('Exception while downloading gym details: %s', e)
         return False
 
+def encounter_request(api,position,encounterid,spawnpointid):
+    try:
+        x = api.encounter(player_latitude=f2i(position[0]),
+                      player_longitude=f2i(position[1]),
+                      encounter_id=encounterid,
+                      spawn_point_id=spawnpointid)
+        return x
+    except Exception as e:
+        log.warning('Exception while Encountering pokemon: %s', e)
+        return False
 
 def calc_distance(pos1, pos2):
     R = 6378.1  # km radius of the earth

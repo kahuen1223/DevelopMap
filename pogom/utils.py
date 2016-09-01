@@ -250,6 +250,15 @@ def i8ln(word):
         log.debug('Unable to find translation for "%s" in locale %s!', word, config['LOCALE'])
         return word
 
+def get_move_name(move_id):
+    if not hasattr(get_move_name, 'moves'):
+        file_path = os.path.join( config['ROOT_PATH'], config['DATA_DIR'], 'moves.min.json')
+        with open(file_path, 'r') as f:
+            get_move_name.moves = json.loads(f.read())
+    move = list(filter(lambda j: j['id'] == move_id, get_move_name.moves))
+    if len(move) > 0:
+        return move[0].get("name", "?")
+    return "?"
 
 def get_pokemon_data(pokemon_id):
     if not hasattr(get_pokemon_data, 'pokemon'):
