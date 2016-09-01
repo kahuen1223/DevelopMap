@@ -301,7 +301,20 @@ class Pokemon(BaseModel):
 
         for idx, sp in enumerate(s):
             if geopy.distance.distance(center, (sp['lat'], sp['lng'])).meters <= step_distance:
-                filtered.append(s[idx])
+                p = dict(s[idx])
+                filtered.append(p)
+                
+                p = dict(s[idx])
+                p['time'] = p['time'] + 900
+                filtered.append(p)
+                
+                p = dict(s[idx])
+                p['time'] = p['time'] + 900 + 900
+                filtered.append(p)
+                
+                p = dict(s[idx])
+                p['time'] = p['time'] + 900 + 900 + 900
+                filtered.append(p)
 
         # at this point, 'time' is DISAPPEARANCE time, we're going to morph it to APPEARANCE time
         for location in filtered:
